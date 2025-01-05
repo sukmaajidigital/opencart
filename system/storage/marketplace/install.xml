@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+	<code>Eshop Theme</code>
+    <name>Eshop Theme</name>
+    <version>1.0</version>
+    <author>garidinh</author>
+    <link>https://blogitcode.com</link>	
+		<file path="catalog/controller/common/menu.php">
+        <operation>
+            <search>
+				<![CDATA[
+					$data['categories'] = array();
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+			
+			$data['home'] = $this->url->link('common/home');
+			$data['special'] = $this->url->link('product/special');
+			$data['manufacturer'] = $this->url->link('product/manufacturer');
+			$data['compare'] = $this->url->link('product/compare');
+			$data['contact'] = $this->url->link('information/contact');
+			
+            ]]></add>
+        </operation>
+    </file>
+	
+	<file path="catalog/model/catalog/product.php">
+        <operation>
+            <search>
+				<![CDATA[
+					public function checkProductCategory($product_id, $category_ids) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+	
+			public function getTotalProductSales($product_id) {	 
+				$query = $this->db->query("SELECT COUNT(DISTINCT order_id) AS total FROM " . DB_PREFIX . "order_product WHERE product_id = '" . (int)$product_id . "'");	
+				
+				if (isset($query->row['total'])) {
+					return $query->row['total'];
+				} else {
+					return 0;
+				}
+			}
+			public function getProductRelatedByCategory($product_id) {
+			 $product_data = array();
+			 $get_cat = $this->db->query("SELECT * FROM " . DB_PREFIX . "product_to_category WHERE product_id = '" . (int)$product_id . "'");     
+			 $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product_to_category WHERE category_id = '" . (int)$get_cat->row['category_id'] . "' AND product_id != '" . (int)$product_id . "' ORDER BY RAND() LIMIT 0,4");                       
+			 foreach ($query->rows as $result) {
+				$product_data[$result['product_id']] = $this->getProduct($result['product_id']);
+				}   
+				return $product_data;
+			} 
+
+			public function getProductSpecialData($product_id) {
+				$query = $this->db->query("SELECT `date_end` FROM " . DB_PREFIX . "product_special WHERE product_id = '" . (int)$product_id . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1");
+
+				if ($query->num_rows) {
+					return $query->row;
+				} else {
+					return FALSE;
+				}
+			}
+			
+            ]]></add>
+        </operation>
+    </file>
+	
+	<file path="catalog/controller/product/product.php">
+        <operation>
+            <search>
+				<![CDATA[
+					$results = $this->model_catalog_product->getProductRelated($this->request->get['product_id']);
+				]]>
+			</search>
+            <add position="replace"><![CDATA[
+			$count_result = $this->model_catalog_product->getProductRelated($this->request->get['product_id']);
+			if($count_result){
+			  $results = $this->model_catalog_product->getProductRelated($this->request->get['product_id']);
+			} else {
+			  $results = $this->model_catalog_product->getProductRelatedByCategory($this->request->get['product_id']);
+			}
+
+            ]]></add>
+        </operation>
+		
+		 <operation>
+            <search>
+				<![CDATA[
+					if ($product_info['quantity'] <= 0) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+			$total_sales = $this->model_catalog_product->getTotalProductSales($product_info['product_id']);
+			if($product_info['price'] > 0){
+				$discount_product = round((($product_info['price'] -  $product_info['special'])/$product_info['price']) * 100 ,0). '%';
+			} else {
+				$discount_product ='';
+			}
+			
+			$data['total_sales'] = $total_sales;
+			$data['discount_product'] = $discount_product;
+
+            ]]></add>
+        </operation>
+		
+		<operation>
+            <search>
+				<![CDATA[
+					if ($this->config->get('config_review_status')) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+			if($result['price'] > 0){
+				$discount_related = round((($result['price'] -  $result['special'])/$result['price']) * 100 ,0). '%';
+			} else {
+				$discount_related = '';
+			}
+			
+            
+			]]></add>
+        </operation>
+		
+		<operation>
+            <search>
+				<![CDATA[
+					$data['products'][] = array(
+				]]>
+			</search>
+            <add position="after"><![CDATA[
+			'discount_related' => $discount_related,
+            ]]></add>
+        </operation>
+    </file>	
+	
+	<file path="catalog/controller/product/category.php">
+		<operation>
+            <search>
+				<![CDATA[
+					if ($this->config->get('config_review_status')) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+				if($product_total > 0 &&  $result['price'] > 0){
+				  $discount = round((($result['price'] -  $result['special'])/$result['price']) * 100 ,0). '%';
+				} else {
+				 $discount = '';
+				}
+            ]]></add>
+        </operation>
+		
+		<operation>
+            <search>
+				<![CDATA[
+					$data['products'][] = array(
+				]]>
+			</search>
+            <add position="after"><![CDATA[
+			'discount' => $discount,
+            ]]></add>
+        </operation>
+    </file>	
+	
+	<file path="catalog/controller/product/special.php">
+		<operation>
+            <search>
+				<![CDATA[
+					if ($this->config->get('config_review_status')) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+				if($product_total > 0 &&  $result['price'] > 0){
+				  $discount = round((($result['price'] -  $result['special'])/$result['price']) * 100 ,0). '%';
+				} else {
+				 $discount = '';
+				}
+            ]]></add>
+        </operation>
+		
+		<operation>
+            <search>
+				<![CDATA[
+					$data['products'][] = array(
+				]]>
+			</search>
+            <add position="after"><![CDATA[
+			'discount' => $discount,
+            ]]></add>
+        </operation>
+    </file>	
+	
+	<file path="catalog/controller/product/search.php">
+		<operation>
+            <search>
+				<![CDATA[
+					if ($this->config->get('config_review_status')) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+				if($product_total > 0 &&  $result['price'] > 0){
+				  $discount = round((($result['price'] -  $result['special'])/$result['price']) * 100 ,0). '%';
+				} else {
+				 $discount = '';
+				}
+            ]]></add>
+        </operation>
+
+		<operation>
+            <search>
+				<![CDATA[
+					$data['products'][] = array(
+				]]>
+			</search>
+            <add position="after"><![CDATA[
+			'discount' => $discount,
+            ]]></add>
+        </operation>
+    </file>	
+	
+	<file path="catalog/controller/product/manufacturer.php">
+		<operation>
+            <search>
+				<![CDATA[
+					if ($this->config->get('config_review_status')) {
+				]]>
+			</search>
+            <add position="before"><![CDATA[
+				if($product_total > 0 &&  $result['price'] > 0){
+				  $discount = round((($result['price'] -  $result['special'])/$result['price']) * 100 ,0). '%';
+				} else {
+				 $discount = '';
+				}
+            ]]></add>
+        </operation>
+
+		<operation>
+            <search>
+				<![CDATA[
+					$data['products'][] = array(
+				]]>
+			</search>
+            <add position="after"><![CDATA[
+			'discount' => $discount,
+            ]]></add>
+        </operation>
+    </file>	
+	
+</modification>

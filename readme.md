@@ -36,10 +36,10 @@ Ikuti langkah-langkah berikut untuk menginstal OpenCart di sistem Anda:
 
 2. Buat database baru dengan nama `opencart_one`.
 
-3. Import file SQL ke dalam database Anda. file sql ( ![opencart_one.sql](opencart_one.sql) )
+3. Import file SQL ke dalam database Anda. file sql ( [opencart_one.sql](opencart_one.sql) )
 
 4. Sesuaikan file konfigurasi:  
-   Edit ![config.php](config.php) dan ![login/config.php](login/config.php) ubah pada kode berikut: (sesuaikan dengan sistem anda)
+   Edit [config.php](config.php) dan [login/config.php](login/config.php) ubah pada kode berikut: (sesuaikan dengan sistem anda)
 
    ```php
    define('HTTP_SERVER', 'http://localhost/opencart/login/');
@@ -48,7 +48,7 @@ Ikuti langkah-langkah berikut untuk menginstal OpenCart di sistem Anda:
    ```
 
 5. Sesuaikan file konfigurasi database di file :
-   Edit ![config.php](config.php) dan ![login/config.php](login/config.php) ubah pada kode berikut: (sesuaikan dengan sistem anda)
+   Edit [config.php](config.php) dan [login/config.php](login/config.php) ubah pada kode berikut: (sesuaikan dengan sistem anda)
 
    ```php
    // DB
